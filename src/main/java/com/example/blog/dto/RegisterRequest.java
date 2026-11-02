@@ -19,7 +19,7 @@ public record RegisterRequest (
       String email,
       @NotBlank 
       @Size (max = 6,min = 6)
-     String capcha
+     String captcha
 ){
      
     

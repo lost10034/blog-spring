@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body{
+            background-color: skyblue;
+        }
+        body{
+            display: grid;
+            justify-content: center;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1 th:text="|你好，${userName}|"></h1>
+    </header>
+<main>
+    <span th:text="|你的的验证码是：${captcha}|"></span>
+     <span th:text="|验证码将在：${time} 分钟过期|"></span>
+</main>
+<footer>
+    <div>无法抽身的莫比乌斯环</div>
+</footer>    
+</body>
+</html>
