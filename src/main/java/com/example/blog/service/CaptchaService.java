@@ -1,4 +1,4 @@
-package com.example.blog.service.captchaSend;
+package com.example.blog.service;
 
 import java.security.SecureRandom;
 

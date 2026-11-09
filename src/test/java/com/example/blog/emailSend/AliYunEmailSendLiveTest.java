@@ -10,7 +10,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import com.example.blog.adapter.AliYunAdapter;
 import com.example.blog.config.sendEmail.SendAliYunDefault;
 import com.example.blog.enums.SendStatus;
-import com.example.blog.service.captchaSend.EmailSendService;
+import com.example.blog.service.EmailSendService;
 
 /**
  * Sends a real email only when ALIYUN_LIVE=true is explicitly set.

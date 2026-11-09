@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import com.example.blog.repository.User.UserRepository;
+import com.example.blog.repository.UserRepository;
 
 
 

@@ -1,4 +1,4 @@
-package com.example.blog.service.Template;
+package com.example.blog.service;
 
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;

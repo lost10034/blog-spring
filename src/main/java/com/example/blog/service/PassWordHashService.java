@@ -1,4 +1,4 @@
-package com.example.blog.service.PassWord;
+package com.example.blog.service;
 
 import java.util.concurrent.CompletableFuture;
 

@@ -8,7 +8,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
-import com.example.blog.service.Template.TemplateService;
+import com.example.blog.service.TemplateService;
 
 /**
  * 纯单元测试：不启动 Spring 上下文，不依赖 MySQL / Redis，也不会真的发邮件。

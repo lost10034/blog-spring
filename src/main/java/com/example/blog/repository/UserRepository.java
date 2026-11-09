@@ -1,4 +1,4 @@
-package com.example.blog.repository.User;
+package com.example.blog.repository;
 
 
 import java.util.UUID;

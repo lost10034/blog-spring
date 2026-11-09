@@ -15,8 +15,8 @@ import com.example.blog.adapter.SendCloudAdapter;
 import com.example.blog.config.sendEmail.SendAliYunDefault;
 import com.example.blog.config.sendEmail.SendCloudProperties;
 import com.example.blog.enums.SendStatus;
-import com.example.blog.service.Template.TemplateService;
-import com.example.blog.service.captchaSend.EmailSendService;
+import com.example.blog.service.EmailSendService;
+import com.example.blog.service.TemplateService;
 import com.sendcloud.sdk.model.TextContent.ScContentType;
 
 /**
