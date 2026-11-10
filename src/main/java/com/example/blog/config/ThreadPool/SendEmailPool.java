@@ -18,6 +18,8 @@ public class SendEmailPool {
         ThreadPoolTaskExecutor executor= builder.corePoolSize(2)
        .maxPoolSize(4).queueCapacity(100)
        .threadNamePrefix("email").awaitTermination(true).awaitTerminationPeriod(Duration.ofSeconds(20)).build();
+            // 强背压：队列打满(4 线程忙 + 100 排队)时立刻抛 RejectedExecutionException,
+            // 由调用方(controller) try-catch 后给 429 "稍后再试",而不是默默拖着用户等
             executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
        return executor;
     }

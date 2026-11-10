@@ -10,10 +10,13 @@ import com.aliyun.dm20151123.models.SingleSendMailResponseBody;
 import com.aliyun.tea.TeaException;
 import com.aliyun.teautil.models.RuntimeOptions;
 import com.example.blog.adapter.AliYunAdapter;
+import com.example.blog.adapter.LimitAdapter;
 import com.example.blog.adapter.SendCloudAdapter;
 import com.example.blog.config.sendEmail.SendAliYunDefault;
 import com.example.blog.config.sendEmail.SendCloudProperties;
 import com.example.blog.enums.SendStatus;
+import com.example.blog.enums.StatusLimit;
+import com.example.blog.interfaces.RedisLimit;
 import com.example.blog.interfaces.SendEmail;
 import com.sendcloud.sdk.builder.SendCloudBuilder;
 import com.sendcloud.sdk.config.Region;
@@ -30,15 +33,22 @@ public class EmailSendService implements SendEmail {
     /** SendCloud 的 API_USER / API_KEY，从环境变量读取，避免把密钥写进仓库 */
     private  final SendCloudProperties sendCloudProperties;
     private  final SendAliYunDefault sendAliYunDefault;
-    public  EmailSendService(SendCloudProperties sendCloudProperties,SendAliYunDefault sendAliYunDefault){
+    private  final RedisLimit redisLimit;
+    public  EmailSendService(SendCloudProperties sendCloudProperties,SendAliYunDefault sendAliYunDefault,RedisLimit redisLimit){
         this.sendCloudProperties=sendCloudProperties;
         this.sendAliYunDefault=sendAliYunDefault;
+        this.redisLimit=redisLimit;
     }
     @Override
     @Async ("sendEmailExecutor")
     public CompletableFuture<SendStatus> SendEmailCaptchaSendCloud(SendCloudAdapter adapter) throws Exception{
-        CompletableFuture<SendStatus> SUCCESS=CompletableFuture.completedFuture(SendStatus.SEND_SUCCESS);
+         CompletableFuture<SendStatus> SUCCESS=CompletableFuture.completedFuture(SendStatus.SEND_SUCCESS);
         CompletableFuture<SendStatus> FAULT=CompletableFuture.completedFuture(SendStatus.SEND_FAULT);
+        StatusLimit limit = redisLimit.expiredLimit(LimitAdapter.builder().key(adapter.address()).value(adapter.limitValue()).timeOut(5).destory(60).build());
+        if (limit != StatusLimit.SUCCESS) {
+            logger.info("该邮箱处于冷却期间: {}", adapter.address());
+            return FAULT;
+        }
         MailAddressReceiver receiver = new MailAddressReceiver();
         receiver.addTo(adapter.address());
         MailBody body = new MailBody();
@@ -69,6 +79,11 @@ public class EmailSendService implements SendEmail {
     public  CompletableFuture<SendStatus> SendEmailCaptchaAliYun(AliYunAdapter aliYunAdapter)throws Exception{
         CompletableFuture<SendStatus> SUCCESS=CompletableFuture.completedFuture(SendStatus.SEND_SUCCESS);
         CompletableFuture<SendStatus> FAULT=CompletableFuture.completedFuture(SendStatus.SEND_FAULT);
+        StatusLimit limit = redisLimit.expiredLimit(LimitAdapter.builder().key(aliYunAdapter.toAddress()).value(aliYunAdapter.limitValue()).timeOut(5).destory(60).build());
+        if (limit != StatusLimit.SUCCESS) {
+            logger.info("该邮箱处于冷却期间: {}", aliYunAdapter.toAddress());
+            return FAULT;
+        }
        boolean hasReplyAddress = aliYunAdapter.ReplyAddress() != null
                && !aliYunAdapter.ReplyAddress().isBlank();
        SingleSendMailRequest request=new SingleSendMailRequest()
@@ -86,7 +101,7 @@ public class EmailSendService implements SendEmail {
        try{
         SingleSendMailResponse response=sendAliYunDefault.dmClient().singleSendMailWithOptions(request, new RuntimeOptions());
         SingleSendMailResponseBody body=response.getBody();
-        logger.info("阿里云 响应：statusCode{},requestId={},envId={}", response.getStatusCode(),body.getRequestId(),body.getEnvId());
+        logger.info("阿里云 响应：statusCode={},requestId={},envId={}", response.getStatusCode(),body.getRequestId(),body.getEnvId());
         return  response.getStatusCode()!=null&&response.getStatusCode()/100==2?SUCCESS:FAULT;
        }catch(TeaException e){
         logger.error("阿里云邮箱发送失败：{} 诊断：{}",e.getMessage(),e.getData()==null?null:e.getData().get("Recommend"));

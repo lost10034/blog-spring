@@ -42,7 +42,7 @@ class EmailSendLiveTest {
 
     @Test
     void sendsRealEmail() throws Exception {
-        EmailSendService service = new EmailSendService(sendCloudProperties(), new SendAliYunDefault());
+        EmailSendService service = new EmailSendService(sendCloudProperties(), new SendAliYunDefault(), new NoOpRedisLimit());
 
         SendCloudAdapter adapter = new SendCloudAdapter(
                 TO,                 // address: 收件人
@@ -51,7 +51,8 @@ class EmailSendLiveTest {
                 FROM_NAME,          // formName: 发件人显示名
                 SUBJECT,            // subject: 邮件主题
                 ScContentType.html, // conteType: 正文类型
-                null                // text: 纯文本内容（本服务未使用）
+                null,               // text: 纯文本内容（本服务未使用）
+                "1"                 // limitValue: 冷却锁占位值
         );
 
         SendStatus status = service.SendEmailCaptchaSendCloud(adapter).get(60, TimeUnit.SECONDS);
@@ -71,7 +72,6 @@ class EmailSendLiveTest {
                 SendCloudProperties.class.getDeclaredConstructor(String.class, String.class);
         constructor.setAccessible(true);
         return constructor.newInstance(apiUser, apiKey);
-
     }
 
     private String renderEmail() {
