@@ -13,7 +13,7 @@ public class PassWordHashService {
     public PassWordHashService(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
-
+    
     @Async ("argon2Executor")
     public CompletableFuture<String> hash(String passWord){
           String hash=passwordEncoder.encode(passWord);

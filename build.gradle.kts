@@ -18,6 +18,7 @@ repositories {
 }
 
 dependencies {
+	implementation("io.jsonwebtoken:jjwt-api:0.13.0")
 	implementation("com.aliyun:dm20151123:1.12.3")
 	implementation("net.sendcloud.sdk:sendcloud-sdk-java:2.0")
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
@@ -29,6 +30,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-redis-test")

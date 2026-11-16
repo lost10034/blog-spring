@@ -20,11 +20,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor 
 @NoArgsConstructor 
 @Entity 
-@Table(name = "users",indexes = {@Index (name="idx_name",columnList = "use_name")
-,@Index (name="idx_status",columnList = "use_status")})
+@Table(name = "users",indexes = {@Index (name="use_name_id",columnList = "use_name,use_id")
+,@Index (name="use_name_status",columnList = "use_name,use_status"),@Index (name="use_status_role",columnList = "use_status,use_role")})
 public class User {
     @Id 
     @GeneratedValue 
+    @Column (name = "use_id",unique = true,nullable = true,length = 128 )
     private  UUID id;
     @Column (name ="use_name",unique = true,nullable = true,length = 24)
     private  String userName;
@@ -38,5 +39,6 @@ public class User {
     private  String email;
     @Column (name = "use_status",nullable = true)
     private  boolean status;
-
+    @Column (name = "use_role",nullable =true,length = 16)
+    private  String role;
 }

@@ -6,7 +6,7 @@ import io.lettuce.core.RedisClient;
 import org.springframework.beans.factory.annotation.Value;
 
 @Configuration 
-public class redisConfig { 
+public class RedisConfig { 
     @Bean 
 public RedisClient asyncClient(
         @Value ("${spring.data.redis.host}") String host,
