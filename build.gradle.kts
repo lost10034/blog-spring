@@ -18,6 +18,7 @@ repositories {
 }
 
 dependencies {
+	implementation("io.github.resilience4j:resilience4j-all:2.4.0")
 	implementation("io.jsonwebtoken:jjwt-api:0.13.0")
 	implementation("com.aliyun:dm20151123:1.12.3")
 	implementation("net.sendcloud.sdk:sendcloud-sdk-java:2.0")

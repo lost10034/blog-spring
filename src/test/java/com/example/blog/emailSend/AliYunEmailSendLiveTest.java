@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import com.example.blog.adapter.AliYunAdapter;
+import com.example.blog.config.resilience4j.EmailResilience4jConfig;
 import com.example.blog.config.sendEmail.SendAliYunDefault;
 import com.example.blog.enums.SendStatus;
 import com.example.blog.service.EmailSendService;
@@ -48,7 +49,7 @@ class AliYunEmailSendLiveTest {
                 "1"                                   // limitValue: 冷却锁占位值
         );
 
-        EmailSendService service = new EmailSendService(null, new SendAliYunDefault(), new NoOpRedisLimit());
+        EmailSendService service = new EmailSendService(null, new SendAliYunDefault(), new NoOpRedisLimit(), new EmailResilience4jConfig());
         SendStatus status = service.SendEmailCaptchaAliYun(adapter).get(60, TimeUnit.SECONDS);
 
         assertThat(status).isEqualTo(SendStatus.SEND_SUCCESS);

@@ -1,5 +1,9 @@
 package com.example.blog.service;
+import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -12,6 +16,7 @@ import com.aliyun.teautil.models.RuntimeOptions;
 import com.example.blog.adapter.AliYunAdapter;
 import com.example.blog.adapter.LimitAdapter;
 import com.example.blog.adapter.SendCloudAdapter;
+import com.example.blog.config.resilience4j.EmailResilience4jConfig;
 import com.example.blog.config.sendEmail.SendAliYunDefault;
 import com.example.blog.config.sendEmail.SendCloudProperties;
 import com.example.blog.enums.SendStatus;
@@ -26,6 +31,8 @@ import com.sendcloud.sdk.model.MailBody;
 import com.sendcloud.sdk.model.SendCloudMail;
 import com.sendcloud.sdk.model.TextContent;
 import com.sendcloud.sdk.util.ResponseData;
+
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 @Service
 public class EmailSendService implements SendEmail {
 
@@ -34,10 +41,13 @@ public class EmailSendService implements SendEmail {
     private  final SendCloudProperties sendCloudProperties;
     private  final SendAliYunDefault sendAliYunDefault;
     private  final RedisLimit redisLimit;
-    public  EmailSendService(SendCloudProperties sendCloudProperties,SendAliYunDefault sendAliYunDefault,RedisLimit redisLimit){
+    private  final EmailResilience4jConfig resilience4jConfig;
+    
+    public  EmailSendService(SendCloudProperties sendCloudProperties,SendAliYunDefault sendAliYunDefault,RedisLimit redisLimit,EmailResilience4jConfig resilience4jConfig){
         this.sendCloudProperties=sendCloudProperties;
         this.sendAliYunDefault=sendAliYunDefault;
         this.redisLimit=redisLimit;
+        this.resilience4jConfig=resilience4jConfig;
     }
     @Override
     @Async ("sendEmailExecutor")
@@ -64,15 +74,22 @@ public class EmailSendService implements SendEmail {
         email.setContent(content);
         SendCloud sendCloud = SendCloudBuilder.build();
         try {
-            ResponseData response = sendCloud.sendMail(email,sendCloudProperties.credential()
-                    , Region.CN, null, null, null);
+            ResponseData response =this.resilience4jConfig.basicDefault( () -> sendCloud.sendMail(
+                email, sendCloudProperties.credential(), Region.CN, null, null, null),
+        "sendCloud").get();
             logger.info("SendCloud 响应: result={}, statusCode={}, message={}, info={}",
                     response.getResult(), response.getStatusCode(), response.getMessage(), response.getInfo());
             return response.getResult() ? SUCCESS : FAULT;
-        } catch (Exception e) {
-            logger.error("SendCloud 邮件发送异常", e);
-            return FAULT;
-        }
+        } catch (CallNotPermittedException e) {
+    logger.warn("SendCloud 熔断器已打开，拒绝发送");
+    return FAULT;
+} catch (Throwable e) {
+    if (e instanceof Error error) {
+        throw error;
+    }
+    logger.error("SendCloud 邮件发送异常", e);
+    return FAULT;
+}
     }
     @Override 
     @Async ("sendEmailExecutor")
@@ -99,17 +116,28 @@ public class EmailSendService implements SendEmail {
            request.setReplyAddress(aliYunAdapter.ReplyAddress());
        }
        try{
-        SingleSendMailResponse response=sendAliYunDefault.dmClient().singleSendMailWithOptions(request, new RuntimeOptions());
+        SingleSendMailResponse response = resilience4jConfig.basicDefault(() -> sendAliYunDefault.dmClient()
+                        .singleSendMailWithOptions(request, new RuntimeOptions()), "aliyun").get();
         SingleSendMailResponseBody body=response.getBody();
         logger.info("阿里云 响应：statusCode={},requestId={},envId={}", response.getStatusCode(),body.getRequestId(),body.getEnvId());
         return  response.getStatusCode()!=null&&response.getStatusCode()/100==2?SUCCESS:FAULT;
-       }catch(TeaException e){
-        logger.error("阿里云邮箱发送失败：{} 诊断：{}",e.getMessage(),e.getData()==null?null:e.getData().get("Recommend"));
-        return  FAULT;
-       } catch (Exception e){
-        logger.error("阿里云邮箱发送异常",e);
-        return  FAULT;
+       } catch (CallNotPermittedException e) {
+        logger.warn("阿里云熔断器已打开，拒绝发送");
+        return FAULT;
+       } catch (Throwable e) {
+        if (e instanceof Error error) {
+            throw error;
+        }
+        if (e instanceof TeaException teaException) {
+            logger.error("阿里云邮箱发送失败：{} 诊断：{}",
+                    teaException.getMessage(),
+                    teaException.getData() == null ? null : teaException.getData().get("Recommend"));
+        } else {
+            logger.error("阿里云邮箱发送异常", e);
+        }
+        return FAULT;
        }
         
     }
+   
 }

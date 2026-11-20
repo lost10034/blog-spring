@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import com.example.blog.adapter.CacheAdapter;
+
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.SetArgs;
@@ -42,24 +44,24 @@ public class CacheService {
     }
 
     /** GET:key 不存在、超时或执行失败返回 Optional.empty() */
-    public Optional<String> get(String key, int timeoutSeconds) {
-        return await(timeoutSeconds, async.get(key));
+    public Optional<String> get(CacheAdapter cacheAdapter) {
+        return await(cacheAdapter.timeoutSeconds(), async.get(cacheAdapter.key()));
     }
 
     /** DEL:varargs 必须是最后一个参数,所以超时参数放在前面 */
-    public Optional<Long> del(int timeoutSeconds, String... keys) {
-        return await(timeoutSeconds, async.del(keys));
+    public Optional<Long> del(CacheAdapter cacheAdapter) {
+        return await(cacheAdapter.timeoutSeconds(), async.del(cacheAdapter.keys()));
     }
 
     /** SET:无过期时间,长期保留 */
-    public Optional<String> set(String key, String value, int timeoutSeconds) {
-        return await(timeoutSeconds, async.set(key, value));
+    public Optional<String> set(CacheAdapter cacheAdapter) {
+        return await(cacheAdapter.timeoutSeconds(), async.set(cacheAdapter.key(), cacheAdapter.value()));
     }
 
     /** SET key value EX seconds [NX]:nx=true 时仅当 key 不存在才写入 */
-    public Optional<String> setWithExpire(String key, String value, int expireSeconds, int timeoutSeconds, boolean nx) {
-        SetArgs args = nx ? SetArgs.Builder.ex(expireSeconds).nx() : SetArgs.Builder.ex(expireSeconds);
-        return await(timeoutSeconds, async.set(key, value, args));
+    public Optional<String> setWithExpire(CacheAdapter cacheAdapter) {
+        SetArgs args = cacheAdapter.nx() ? SetArgs.Builder.ex(cacheAdapter.expireSeconds()).nx() : SetArgs.Builder.ex(cacheAdapter.expireSeconds());
+        return await(cacheAdapter.timeoutSeconds(), async.set(cacheAdapter.key(), cacheAdapter.value(), args));
     }
 
     /** 统一等待结果:把 Future 转成有界阻塞等待,超时/中断/失败折叠为 Optional.empty(),错误均记入日志 */

@@ -12,6 +12,7 @@ import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import com.example.blog.adapter.SendCloudAdapter;
+import com.example.blog.config.resilience4j.EmailResilience4jConfig;
 import com.example.blog.config.sendEmail.SendAliYunDefault;
 import com.example.blog.config.sendEmail.SendCloudProperties;
 import com.example.blog.enums.SendStatus;
@@ -42,7 +43,7 @@ class EmailSendLiveTest {
 
     @Test
     void sendsRealEmail() throws Exception {
-        EmailSendService service = new EmailSendService(sendCloudProperties(), new SendAliYunDefault(), new NoOpRedisLimit());
+        EmailSendService service = new EmailSendService(sendCloudProperties(), new SendAliYunDefault(), new NoOpRedisLimit(), new EmailResilience4jConfig());
 
         SendCloudAdapter adapter = new SendCloudAdapter(
                 TO,                 // address: 收件人
