@@ -1,8 +1,5 @@
 package com.example.blog.service;
-import java.io.IOException;
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
